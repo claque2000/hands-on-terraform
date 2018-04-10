@@ -40,14 +40,14 @@ resource "aws_security_group" "allow_all" {
   }
 }
 
-resource "aws_instance" "instance" {
+resource "aws_instance" "strapi" {
   tags = {
-    Name = "${var.name}"
+    Name = "${var.name}-strapi"
   }
 
   instance_type = "${var.instance_type}"
 
-  ami      = "${var.instance_ami}"
+  ami      =
   key_name = "${aws_key_pair.keypair.key_name}"
 
   # network
@@ -60,6 +60,31 @@ resource "aws_instance" "instance" {
   }
 }
 
-output "instance_ip" {
-  value = "${aws_instance.instance.public_ip}"
+resource "aws_instance" "mongodb" {
+  tags = {
+    Name = "${var.name}-mongo"
+  }
+
+  instance_type = "${var.instance_type}"
+
+  ami      =
+  key_name = "${aws_key_pair.keypair.key_name}"
+
+  # network
+  associate_public_ip_address = true
+  subnet_id                   = "${element(data.aws_subnet.this.*.id, count.index)}"
+  vpc_security_group_ids      = ["${aws_security_group.allow_all.id}"]
+
+  lifecycle {
+    ignore_changes = ["ami"]
+  }
+}
+
+
+output "strapi_ip" {
+  value = "${aws_instance.strapi.public_ip}"
+}
+
+output "mongodb_ip" {
+  value = "${aws_instance.mongodb.public_ip}"
 }
